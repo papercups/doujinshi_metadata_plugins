@@ -63,11 +63,11 @@ def to_metadata(log,gmetadata,ExHentai_Status): # {{{
                 mi.language = tag_
             else:
                 tags_.append(tag_)
-#         elif re.match('parody|group|character|artist', tag):
-#             log('drop tag %s' % tag)
-#             continue
+        elif re.match('parody|group|character|artist', tag):
+            #log('drop tag %s' % tag)
+            continue
         elif not ':' in tag:
-            log('drop tag %s' % tag)
+            #log('drop tag %s' % tag)
             continue
         else:
             tags_.append(tag)
@@ -108,7 +108,9 @@ class Ehentai(Source):
         Option('ipb_member_id','string',None,_('ipb_member_id'),
                _('If Use Exhentai is True, please input your cookies.')),
         Option('ipb_pass_hash','string',None,_('ipb_pass_hash'),
-               _('If Use Exhentai is True, please input your cookies.'))
+               _('If Use Exhentai is True, please input your cookies.')),
+        Option('sk','string',None,_('sk'),
+               _('If Use Exhentai is True, please input your cookies.')),
                )
     
     config_help_message = ('<p>'+_('To Download Metadata from exhentai.org you must sign up'
@@ -123,8 +125,11 @@ class Ehentai(Source):
     def config_exhentai(self): # {{{
         
         ExHentai_Status = self.prefs['Use_Exhentai']
-        ExHentai_Cookies = [{'name':'ipb_member_id', 'value':self.prefs['ipb_member_id'], 'domain':'.exhentai.org', 'path':'/'},
-                            {'name':'ipb_pass_hash', 'value':self.prefs['ipb_pass_hash'], 'domain':'.exhentai.org', 'path':'/'}]
+        ExHentai_Cookies = [
+            {'name':'ipb_member_id', 'value':self.prefs['ipb_member_id'], 'domain':'.exhentai.org', 'path':'/'},
+            {'name':'ipb_pass_hash', 'value':self.prefs['ipb_pass_hash'], 'domain':'.exhentai.org', 'path':'/'},
+            {'name':'sk', 'value':self.prefs['sk'], 'domain':'.exhentai.org', 'path':'/'},
+        ]
         
         if ExHentai_Status is True:
             for cookie in ExHentai_Cookies:
@@ -158,9 +163,12 @@ class Ehentai(Source):
             q = q.encode('utf-8')
         if not q:
             return None
+        '''
         q_dict = {'f_doujinshi':1, 'f_manga':1, 'f_artistcg':1, 'f_gamecg':1, 'f_western':1, 'f_non-h':1,
                   'f_imageset':1, 'f_cosplay':1, 'f_asianporn':1, 'f_misc':1, 'f_search':q, 'f_apply':'Apply+Filter',
                   'advsearch':1, 'f_sname':'on', 'f_sh':'on', 'f_srdd':2}
+        '''
+        q_dict = {'f_cats': 0, 'f_search': q}
         if is_exhentai is False:
             url = EHentai_SEARCH_URL + urlencode(q_dict)
         else:
@@ -177,13 +185,14 @@ class Ehentai(Source):
             return None
         gidlist = []
         for r in results:
-            gidlist.append(list(r))
+            if list(r) not in gidlist:
+                gidlist.append(list(r))
         return gidlist
     # }}}
     
     def get_all_details(self,gidlist,log,abort,result_queue,timeout): # {{{
         
-        EHentai_API_url = 'https://api.e-hentai.org/api.php'
+        EHentai_API_url = 'https://e-hentai.org/api.php'
         br = self.browser
         data = {"method": "gdata","gidlist": gidlist,"namespace": 1}
         data = json.dumps(data)
