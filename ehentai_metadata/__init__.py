@@ -88,7 +88,7 @@ class Ehentai(Source):
     
     name = 'E-hentai Galleries'
     author = 'Wu yuan'
-    version = (1,1,2)
+    version = (1,1,4)
     minimum_calibre_version = (2, 80, 0)
     
     description = _('Download metadata and cover from e-hentai.org.'
@@ -163,11 +163,6 @@ class Ehentai(Source):
             q = q.encode('utf-8')
         if not q:
             return None
-        '''
-        q_dict = {'f_doujinshi':1, 'f_manga':1, 'f_artistcg':1, 'f_gamecg':1, 'f_western':1, 'f_non-h':1,
-                  'f_imageset':1, 'f_cosplay':1, 'f_asianporn':1, 'f_misc':1, 'f_search':q, 'f_apply':'Apply+Filter',
-                  'advsearch':1, 'f_sname':'on', 'f_sh':'on', 'f_srdd':2}
-        '''
         q_dict = {'f_cats': 0, 'f_search': q}
         if is_exhentai is False:
             url = EHentai_SEARCH_URL + urlencode(q_dict)
@@ -192,7 +187,11 @@ class Ehentai(Source):
     
     def get_all_details(self,gidlist,log,abort,result_queue,timeout): # {{{
         
-        EHentai_API_url = 'https://e-hentai.org/api.php'
+        is_exhentai = self.ExHentai_Status
+        if is_exhentai:
+            EHentai_API_url = 'https://exhentai.org/api.php'
+        else:
+            EHentai_API_url = 'https://e-hentai.org/api.php'
         br = self.browser
         data = {"method": "gdata","gidlist": gidlist,"namespace": 1}
         data = json.dumps(data)
